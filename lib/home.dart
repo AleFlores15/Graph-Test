@@ -271,7 +271,8 @@ class _HomeState extends State<Home> {
 
         //toma en cuenta que el peso es el contrario al primer digito del codigo
         int i=0;
-        while(i<vNodoResuelto.length){
+        int contador=0;
+        while(i<vNodoResuelto.length-1){
           int peso=1;
           // bucar en las aristas la conexion del nodo actual con el siguiente y guardar el peso en una variable
          // int peso = aristasResuelto.firstWhere((element) => element.origen.etiqueta == vNodoResuelto[i].etiqueta && element.destino.etiqueta == vNodoResuelto[(i+1)%vNodoResuelto.length].etiqueta).weight;
@@ -284,18 +285,46 @@ class _HomeState extends State<Home> {
           int pesoContrario = peso==0?1:0;
           //print('Peso contrario: $pesoContrario');
           String codTemp = pesoContrario.toString();
+          String pesoCont2= pesoContrario.toString();
 
           //concatenar los pesos de los nodos restantes
           for(int j=i;j<vNodoResuelto.length-1;j++){
+            //print('tamno ${vNodoResuelto.length} ');
             //buscar en las aristas la conexion del nodo actual con el siguiente y guardar el peso en una variable
             int pesoSig = aristasResuelto.firstWhere((element) => element.origen.etiqueta == vNodoResuelto[j].etiqueta && element.destino.etiqueta == vNodoResuelto[(j+1)%vNodoResuelto.length].etiqueta).weight;
             codTemp += pesoSig.toString();
 
           }
+        //  print("cadenas totales ${codTemp} ");
           if(verificarSecuencia(codigoIngresado, codTemp)){
-            print('codigo enviado: ${codigoIngresado}  cadena: ${codTemp} ');
+            //print('codigo enviado: ${codigoIngresado}  cadena: ${codTemp} ');
              aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[i], vNodoResuelto[i], int.parse(pesoContrario.toString())));
+          }else{
+            int contador=i-1;
+            //codTemp= pesoContrario.toString();
+            int x=i;
+            while(x>0){
+              codTemp= pesoContrario.toString();
+
+              for(int j=contador;j<vNodoResuelto.length-1;j++){
+                int pesoSig = aristasResuelto.firstWhere((element) => element.origen.etiqueta == vNodoResuelto[j].etiqueta && element.destino.etiqueta == vNodoResuelto[(j+1)%vNodoResuelto.length].etiqueta).weight;
+                codTemp += pesoSig.toString();
+              }
+
+              if(verificarSecuencia(codigoIngresado, codTemp)){
+                aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[i], vNodoResuelto[contador], int.parse(pesoContrario.toString())));
+                break;
+              }
+              contador--;
+              x--;
+
+            }
+
+
+
           }
+
+
 
           i++;
 
