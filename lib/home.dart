@@ -1,9 +1,12 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:collection/collection.dart';
 
 import 'AristaCurve.dart';
 import 'formas.dart';
+import 'modals/codigo_modal.dart';
+import 'modals/weight_modal.dart';
 import 'modelos.dart';
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -19,7 +22,7 @@ class _HomeState extends State<Home> {
   List<ModeloAristaCurve> aristascurve=[];
   int origentempcurve=-1;
   int destempcurve=-1;
-  int ?codigo;
+  String ?codigo;
 
 
   @override
@@ -78,22 +81,24 @@ class _HomeState extends State<Home> {
       ),
       bottomNavigationBar: BottomAppBar(
         color: Colors.amber.shade200,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            botonIcono(1, Icons.add),
-            botonIcono(2, Icons.delete),
-            botonIcono(3, Icons.moving),
-            botonIcono(4, Icons.arrow_right_alt_sharp),
-            botonIcono(5, Icons.dangerous),
-            botonIcono(6, Icons.new_label),
-          //  botonIcono(7, Icons.verified)
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              botonIcono(1, Icons.add),
+              botonIcono(2, Icons.delete),
+              botonIcono(3, Icons.moving),
+              botonIcono(4, Icons.arrow_right_alt_sharp),
+              botonIcono(5, Icons.dangerous),
+              botonIcono(6, Icons.new_label),
+              botonIcono(7, Icons.verified),
 
-          ],
+            ],
+          ),
         ),
-
-
       ),
+
 
     );
   }
@@ -124,7 +129,7 @@ class _HomeState extends State<Home> {
         origentempcurve=pos;
       }else{
         destempcurve=pos;
-        mostrarDialogoPesoCurve();
+        mostrarDialogoPeso();
 
       }
     }
@@ -159,7 +164,7 @@ class _HomeState extends State<Home> {
             deleteAll();
           }
           if(mode==6){
-            nuevoLabel();
+            confirmation();
           }
 
         });
@@ -178,50 +183,26 @@ class _HomeState extends State<Home> {
 
 
   //Dialog para los pesos
-  Future<void> mostrarDialogoPesoCurve() async {
-    TextEditingController pesoController = TextEditingController();
-    await showDialog(
+
+  Future<void> mostrarDialogoPeso() async {
+    int? peso = await showDialog<int>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Ingrese el peso de la arista curva'),
-          content: TextField(
-            controller: pesoController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: 'Peso'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () {
-                String peso = pesoController.text;
-                int pesoArista = int.tryParse(peso) ?? 1;
-                // Agregar la arista curva con el peso especificado
-                aristascurve.add(ModeloAristaCurve(vNodo[origentempcurve], vNodo[destempcurve], pesoArista));
-                // Limpiar los temporales
-                origentempcurve = -1;
-                destempcurve = -1;
-                // Cerrar el diálogo
-                Navigator.of(context).pop();
-                setState(() {});
-              },
-              child: Text('Aceptar'),
-            ),
-          ],
-        );
+        return PesoDialog();
       },
     );
+    if (peso != null) {
+      aristascurve.add(ModeloAristaCurve(vNodo[origentempcurve], vNodo[destempcurve], peso));
+      origentempcurve = -1;
+      destempcurve = -1;
+      // Cerrar el diálogo
+      setState(() {});
+    }
   }
 
   //Nuevo codigo
-  void nuevoLabel() {
+  void confirmation() {
     if (vNodo.isNotEmpty) {
-      // Si hay nodos en la lista, mostrar un diálogo de confirmación
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -232,10 +213,7 @@ class _HomeState extends State<Home> {
               TextButton(
                 onPressed: () {
                   deleteAll();
-
                   Navigator.of(context).pop();
-                  //limpiar la pantalla
-                  // Mostrar el diálogo para ingresar el nuevo código
                   mostrarDialogoNuevoCodigo();
                 },
                 child: Text('Continuar'),
@@ -258,39 +236,107 @@ class _HomeState extends State<Home> {
 
 // Método para mostrar el diálogo para ingresar el nuevo código
   Future<void> mostrarDialogoNuevoCodigo() async {
-    TextEditingController codigoController = TextEditingController();
-    await showDialog(
+    String? codigoIngresado = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Nuevo Código'),
-          content: TextField(
-            controller: codigoController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: 'Código'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () {
-                String codigo = codigoController.text;
-                setState(() {
-                  this.codigo = int.tryParse(codigo);
-                });
-                Navigator.of(context).pop();
-              },
-              child: Text('Aceptar'),
-            ),
-          ],
-        );
+        return NuevoCodigoDialog();
       },
     );
+    if (codigoIngresado != null) {
+      setState(() {
+        codigo=codigoIngresado;
+        List<ModeloNodo> vNodoResuelto = [];
+        List<ModeloAristaCurve> aristasResuelto = [];
+        //crear nodos
+        for(int i=0; i<codigoIngresado.length+1;i++){
+          vNodoResuelto.add(ModeloNodo('$i', 100.0 + i*100, 500.0, 40, Colors.amber.shade900));
+        }
+
+        //101
+        int c=0;
+        for(c=0; c<codigoIngresado.length;c++){
+          //conectar los nodos pero con los digitos del codigo
+          aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[c], vNodoResuelto[c+1], int.parse(codigoIngresado[c])));
+
+        }
+
+        //imprimirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
+
+        //toma en cuenta que el peso es el contrario al primer digito del codigo
+        int i=0;
+        while(i<vNodoResuelto.length){
+          int peso=1;
+          // bucar en las aristas la conexion del nodo actual con el siguiente y guardar el peso en una variable
+         // int peso = aristasResuelto.firstWhere((element) => element.origen.etiqueta == vNodoResuelto[i].etiqueta && element.destino.etiqueta == vNodoResuelto[(i+1)%vNodoResuelto.length].etiqueta).weight;
+          var aristaEncontrada = aristasResuelto.firstWhereOrNull((element) => element.origen.etiqueta == vNodoResuelto[i].etiqueta && element.destino.etiqueta == vNodoResuelto[(i+1)%vNodoResuelto.length].etiqueta);
+          if (aristaEncontrada != null) {
+            peso = aristaEncontrada.weight;
+          }
+          // print('Peso: $peso');
+          //guardar el peso contrario en una variable
+          int pesoContrario = peso==0?1:0;
+          //print('Peso contrario: $pesoContrario');
+          String codTemp = pesoContrario.toString();
+
+          //concatenar los pesos de los nodos restantes
+          for(int j=i;j<vNodoResuelto.length-1;j++){
+            //buscar en las aristas la conexion del nodo actual con el siguiente y guardar el peso en una variable
+            int pesoSig = aristasResuelto.firstWhere((element) => element.origen.etiqueta == vNodoResuelto[j].etiqueta && element.destino.etiqueta == vNodoResuelto[(j+1)%vNodoResuelto.length].etiqueta).weight;
+            codTemp += pesoSig.toString();
+
+          }
+          if(verificarSecuencia(codigoIngresado, codTemp)){
+            print('codigo enviado: ${codigoIngresado}  cadena: ${codTemp} ');
+             aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[i], vNodoResuelto[i], int.parse(pesoContrario.toString())));
+          }
+
+          i++;
+
+        }
+
+
+        aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[c], vNodoResuelto[0], codigo?[0]=='0'?1:0));
+        //conectar el ultimo nodo con el segundo nodo
+
+        aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[c], vNodoResuelto[1], codigo?[1]=='0'?1:0));
+
+        imprimirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
+
+
+      });
+    }
   }
+
+  bool verificarSecuencia(String codigo, String cadena) {
+    int index = cadena.indexOf(codigo);
+    return index != -1;
+  }
+
+  void imprimirMatrizAdyacencia(List<ModeloNodo> nodos, List<ModeloAristaCurve> aristas) {
+    int n = nodos.length;
+
+    // Crear matriz de adyacencia
+    List<List<int>> matriz = List.generate(n, (_) => List.filled(n, -1));
+
+    // Llenar la matriz con los pesos de las aristas
+    for (var arista in aristas) {
+      int origen = nodos.indexOf(arista.origen);
+      int destino = nodos.indexOf(arista.destino);
+      matriz[origen][destino] = arista.weight;
+    }
+
+    // Imprimir la matriz
+    print("Matriz de Adyacencia:");
+    for (int i = 0; i < n; i++) {
+      print(matriz[i]);
+    }
+  }
+
+
+
+
+
+
 
 
 

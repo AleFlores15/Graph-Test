@@ -42,6 +42,51 @@ class Nodo extends CustomPainter{
 
     //para las aristas curveadas
     aristascurve.forEach((element) {
+
+      //si el nodo es origen y destino
+      if(element.origen == element.destino){
+        paint.color = Colors.black;
+        paint.strokeWidth = 3; // Establece el ancho de línea
+        paint.style = PaintingStyle.stroke;
+        // Cálculo dinámico del punto de control para el bucle
+        double controlX = element.origen.x - 50; // Ajusta este valor según sea necesario para la posición del punto de control
+        double controlY = element.origen.y - 50; // Ajusta este valor según sea necesario para la posición del punto de control
+
+        // Dibujar curva de Bezier
+        Path path = Path();
+        path.moveTo(element.origen.x, element.origen.y);
+
+        canvas.drawPath(path, paint);
+
+        // Dibujar bucle
+        double loopRadius = 27; // Ajusta el radio del bucle según sea necesario
+        canvas.drawArc(
+          Rect.fromCircle(center: Offset(controlX+50, controlY+20), radius: loopRadius),
+          pi, // Ángulo de inicio
+          pi, // Ángulo de barrido
+          false,
+          paint,
+        );
+        // Dibujar peso de la arista
+        TextSpan span = TextSpan(
+          style: TextStyle(color: Colors.black, fontSize: 25),
+          text: element.weight.toString(),
+        );
+        TextPainter tp = TextPainter(
+          text: span,
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        );
+        tp.layout();
+
+        // Posiciona el peso encima del arco
+        double labelX = controlX+50 - tp.width / 2;
+        double labelY = controlY-10 - tp.height;
+        tp.paint(canvas, Offset(labelX, labelY));
+
+        return;
+
+      }
       paint.color = Colors.black;
       paint.strokeWidth = 3; // Establece el ancho de línea
       paint.style = PaintingStyle.stroke; // Configura el estilo de pintura como stroke para que solo se dibuje el contorno
