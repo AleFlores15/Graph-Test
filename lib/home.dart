@@ -86,13 +86,13 @@ class _HomeState extends State<Home> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              botonIcono(1, Icons.add),
-              botonIcono(2, Icons.delete),
-              botonIcono(3, Icons.moving),
-              botonIcono(4, Icons.arrow_right_alt_sharp),
-              botonIcono(5, Icons.dangerous),
-              botonIcono(6, Icons.new_label),
-              botonIcono(7, Icons.verified),
+              botonIcono(1, Icons.add,'Agregar Nodo'),
+              botonIcono(2, Icons.delete,'Borrar Nodo'),
+              botonIcono(3, Icons.moving,'Mover Nodo'),
+              botonIcono(4, Icons.arrow_right_alt_sharp,'Conectar Nodo'),
+              botonIcono(5, Icons.dangerous,'Borrar Todo'),
+              botonIcono(6, Icons.new_label,'Nuevo Codigo'),
+              botonIcono(7, Icons.verified,'Verificar ejercicio'),
 
             ],
           ),
@@ -155,7 +155,7 @@ class _HomeState extends State<Home> {
   }
 
   // widget Icon Button
-  Widget botonIcono(int mode, IconData icon) {
+  Widget botonIcono(int mode, IconData icon,String mensaje) {
     return IconButton(
       onPressed: () {
         setState(() {
@@ -166,6 +166,13 @@ class _HomeState extends State<Home> {
           if(mode==6){
             confirmation();
           }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$mensaje'),
+              duration: Duration(milliseconds: 500)
+            ),
+          );
 
         });
       },
