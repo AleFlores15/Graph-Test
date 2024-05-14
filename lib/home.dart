@@ -330,11 +330,33 @@ class _HomeState extends State<Home> {
 
         }
 
+        int p=1;
+        String cad = '';
+        //TODO: AAAAA
+        while(p>=0){
+          cad=cad+p.toString();
+          for(int h=1;h<vNodoResuelto.length-1;h++){
+            int pesoSig = aristasResuelto.firstWhere((element) => element.origen.etiqueta == vNodoResuelto[h].etiqueta && element.destino.etiqueta == vNodoResuelto[(h+1)%vNodoResuelto.length].etiqueta).weight;
+            cad += pesoSig.toString();
+          }
+          print('cad: $cad');
+          if(verificarSecuencia(codigoIngresado, cad)) {
+            aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[vNodoResuelto.length-1], vNodoResuelto[1], int.parse(p.toString())));
+            //conectar con el resultado contrario de p
+            aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[vNodoResuelto.length-1], vNodoResuelto[0], int.parse((p==0)?'1':'0')));
+            break;
 
-        aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[c], vNodoResuelto[0], codigo?[0]=='0'?1:0));
-        //conectar el ultimo nodo con el segundo nodo
+          }else{
+            aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[vNodoResuelto.length-1], vNodoResuelto[1], int.parse((p==0)?'1':'0')));
+            aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[vNodoResuelto.length-1], vNodoResuelto[0], int.parse(p.toString())));
 
-        aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[c], vNodoResuelto[1], codigo?[1]=='0'?1:0));
+          }
+
+          p--;
+        }
+
+
+
 
         imprimirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
 
