@@ -16,14 +16,21 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
+  List<String> letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+
   int modo =-1;
   List<ModeloNodo> vNodo=[];
+  List<ModeloNodo> vNodoResuelto = [];
+  List<ModeloAristaCurve> aristasResuelto = [];
+
   int contador=0;
   List<ModeloAristaCurve> aristascurve=[];
   int origentempcurve=-1;
   int destempcurve=-1;
   String ?codigo;
-
+  //matriz del resultado
+  List<List<int>> matrizResuelta=[];
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +100,10 @@ class _HomeState extends State<Home> {
               botonIcono(5, Icons.dangerous,'Borrar Todo'),
               botonIcono(6, Icons.new_label,'Nuevo Codigo'),
               botonIcono(7, Icons.verified,'Verificar ejercicio'),
+              botonIcono(8, Icons.chat_bubble_outline_rounded,'Matriz de adyacencia'),
+              //boton de ayuda
+              botonIcono(9, Icons.help,'Ayuda'),
+
 
             ],
           ),
@@ -106,7 +117,9 @@ class _HomeState extends State<Home> {
   //agregar nodo
   addNodo(des){
     contador++;
-    vNodo.add(ModeloNodo('$contador', des.globalPosition.dx, des.globalPosition.dy, 40, Colors.amber.shade900));
+    String etiqueta = letras[(contador - 1) % letras.length];
+    //vNodo.add(ModeloNodo('$contador', des.globalPosition.dx, des.globalPosition.dy, 40, Colors.amber.shade900));
+    vNodo.add(ModeloNodo(etiqueta, des.globalPosition.dx, des.globalPosition.dy, 40, Colors.amber.shade900));
   }
 
   //borrar nodo
@@ -165,6 +178,16 @@ class _HomeState extends State<Home> {
           }
           if(mode==6){
             confirmation();
+          }
+
+          if(mode==7){
+            mostrarResultados();
+          }
+          if (mode == 8) {
+            mostrarMatrizAdyacencia();
+          }
+          if(mode==9){
+            mostrarAyuda();
           }
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -252,11 +275,10 @@ class _HomeState extends State<Home> {
     if (codigoIngresado != null) {
       setState(() {
         codigo=codigoIngresado;
-        List<ModeloNodo> vNodoResuelto = [];
-        List<ModeloAristaCurve> aristasResuelto = [];
         //crear nodos
         for(int i=0; i<codigoIngresado.length+1;i++){
-          vNodoResuelto.add(ModeloNodo('$i', 100.0 + i*100, 500.0, 40, Colors.amber.shade900));
+          String etiqueta = letras[i % letras.length];
+          vNodoResuelto.add(ModeloNodo(etiqueta, 100.0 + i*100, 500.0, 40, Colors.amber.shade900));
         }
 
         //101
@@ -266,8 +288,6 @@ class _HomeState extends State<Home> {
           aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[c], vNodoResuelto[c+1], int.parse(codigoIngresado[c])));
 
         }
-
-        //imprimirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
 
         //toma en cuenta que el peso es el contrario al primer digito del codigo
         int i=0;
@@ -319,20 +339,12 @@ class _HomeState extends State<Home> {
               x--;
 
             }
-
-
-
           }
-
-
-
           i++;
-
         }
 
         int p=1;
         String cad = '';
-        //TODO: AAAAA
         while(p>=0){
           cad=cad+p.toString();
           for(int h=1;h<vNodoResuelto.length-1;h++){
@@ -358,8 +370,8 @@ class _HomeState extends State<Home> {
 
 
 
-        imprimirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
-
+        //imprimirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
+        matrizResuelta=construirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
 
       });
     }
@@ -392,6 +404,372 @@ class _HomeState extends State<Home> {
 
 
 
+  List<List<int>> construirMatrizAdyacencia(List<ModeloNodo> nodos, List<ModeloAristaCurve> aristas) {
+    int n = nodos.length;
+
+    // Crear matriz de adyacencia
+    List<List<int>> matriz = List.generate(n, (_) => List.filled(n, -1));
+
+    for (var arista in aristas) {
+      int origen = nodos.indexOf(arista.origen);
+      int destino = nodos.indexOf(arista.destino);
+      matriz[origen][destino] = arista.weight;
+    }
+
+    return matriz;
+  }
+
+
+  void mostrarMatrizAdyacencia() {
+    List<List<int>> matriz = construirMatrizAdyacencia(vNodo, aristascurve);
+    List<String> etiquetas = vNodo.map((nodo) => nodo.etiqueta).toList(); // Obtener etiquetas de los nodos
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Matriz de adyacencia'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Encabezado de las etiquetas de los nodos
+                Row(
+                  children: [
+                    SizedBox(width: 40), // Espacio en blanco para la celda vacía en la esquina superior izquierda
+                    for (var etiqueta in etiquetas)
+                      Expanded(
+                        child: Text(
+                          etiqueta,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                  ],
+                ),
+                // Cuerpo de la matriz de adyacencia
+                for (int i = 0; i < matriz.length; i++)
+                  Row(
+                    children: [
+                      // Etiqueta del nodo
+                      Expanded(
+                        child: Text(
+                          etiquetas[i],
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      // Valores de la matriz de adyacencia
+                      for (int j = 0; j < matriz[i].length; j++)
+                        Expanded(
+                          child: Text(
+                            matriz[i][j].toString(),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+
+
+  double calcularPorcentajeCompletitud(List<List<int>> matrizUsuario, List<List<int>> matrizPrograma) {
+    int totalElementos = matrizPrograma.length * matrizPrograma.length;
+    int elementosCoincidentes = 0;
+
+    for (int i = 0; i < matrizUsuario.length; i++) {
+      for (int j = 0; j < matrizUsuario[i].length; j++) {
+        if (matrizUsuario[i][j] == matrizPrograma[i][j]) {
+          elementosCoincidentes++;
+        }
+      }
+    }
+
+    return (elementosCoincidentes / totalElementos) * 100;
+  }
+
+
+
+  void mostrarResultados () {
+    List<List<int>> matrizPrograma = construirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
+    List<List<int>> matrizUsuario = construirMatrizAdyacencia(vNodo, aristascurve);
+
+    double porcentajeCompletitud = calcularPorcentajeCompletitud(matrizUsuario, matrizPrograma);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Resultados del ejercicio'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Porcentaje completado: ${porcentajeCompletitud.toStringAsFixed(2)}%'),
+              (porcentajeCompletitud == 100)
+                  ? Text('¡Felicidades! Has completado el ejercicio correctamente.', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green))
+                  : Text(' '),
+              SizedBox(height: 20),
+              SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Aquí puedes mostrar la matriz de adyacencia como lo hiciste anteriormente
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  void mostrarAyuda(){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Ayuda en el ejercicio'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+
+
+              SizedBox(height: 20),
+              SingleChildScrollView(
+                child: Column(
+                  children: [
+                    ElevatedButton(onPressed: (){
+                      mostrarAyudaInicial();
+
+                    }, child: Text('Ayuda Inicial')),
+                    ElevatedButton(onPressed: (){
+                      mostrarAyudaMedia();
+                    }, child: Text('Ayuda Media')),
+                    ElevatedButton(onPressed: (){
+                      mostrarAyudaAvanzada();
+                    }, child: Text('Ayuda Avanzada')),
+                    ElevatedButton(onPressed: (){
+                      mostrarSolucion();
+                    }, child: Text('Ver solución')),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+
+  }
+
+  void mostrarSolucion(){
+    List<List<int>> matriz = construirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
+    List<String> etiquetas = vNodoResuelto.map((nodo) => nodo.etiqueta).toList();
+    showDialog(
+
+      context: context,
+
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Matriz de respuesta'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    SizedBox(width: 40),
+                    for (var etiqueta in etiquetas)
+                      Expanded(
+                        child: Text(
+                          etiqueta,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                  ],
+                ),
+                // Cuerpo de la matriz de adyacencia
+                for (int i = 0; i < matriz.length; i++)
+                  Row(
+                    children: [
+                      // Etiqueta del nodo
+                      Expanded(
+                        child: Text(
+                          etiquetas[i],
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      // Valores de la matriz de adyacencia
+                      for (int j = 0; j < matriz[i].length; j++)
+                        Expanded(
+                          child: Text(
+                            matriz[i][j].toString(),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+  void mostrarAyudaInicial(){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Ayuda inicial'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text('Número de nodos requeridos: ${vNodoResuelto.length}'),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void mostrarAyudaMedia(){
+    // Obtener la primera secuencia de conexión entre los nodos
+    String primeraSecuencia = obtenerPrimeraSecuencia();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Ayuda Media'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text('Primera secuencia de conexión entre nodos:'),
+              Text(primeraSecuencia),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  void mostrarAyudaAvanzada(){
+    // Obtener las conexiones mal hechas del usuario
+    List<String> conexionesIncorrectas = obtenerConexionesIncorrectas();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Ayuda Avanzada'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text('Conexiones mal hechas por el usuario:'),
+              for (var conexion in conexionesIncorrectas)
+                Text(conexion),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String obtenerPrimeraSecuencia() {
+    String secuencia = '';
+    for (int i = 0; i < vNodoResuelto.length - 1; i++) {
+      secuencia += '${vNodoResuelto[i].etiqueta} -> ${vNodoResuelto[i + 1].etiqueta} = ${aristasResuelto[i].weight}, ';
+    }
+    return secuencia;
+  }
+
+  List<String> obtenerConexionesIncorrectas() {
+    List<String> conexionesIncorrectas = [];
+    List<List<int>> matrizUsuario = construirMatrizAdyacencia(vNodo, aristascurve);
+    List<List<int>> matrizResultado = construirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
+    for (int i = 0; i < matrizUsuario.length; i++) {
+      for (int j = 0; j < matrizUsuario[i].length; j++) {
+        if (matrizUsuario[i][j] != matrizResultado[i][j] && (matrizUsuario[i][j] == 0 || matrizUsuario[i][j] == 1)) {
+          String nodoOrigen = vNodo[i].etiqueta;
+          String nodoDestino = vNodo[j].etiqueta;
+          conexionesIncorrectas.add('Conexión mal hecha: $nodoOrigen -> $nodoDestino');
+        }
+      }
+    }
+
+    return conexionesIncorrectas;
+  }
 
 
 
