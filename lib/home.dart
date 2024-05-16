@@ -5,6 +5,7 @@ import 'package:collection/collection.dart';
 
 import 'AristaCurve.dart';
 import 'formas.dart';
+import 'modals/cambiar_peso.dart';
 import 'modals/codigo_modal.dart';
 import 'modals/weight_modal.dart';
 import 'modelos.dart';
@@ -61,6 +62,8 @@ class _HomeState extends State<Home> {
                   case 2: deleteNodo(des);break;
                   //case 3 es el onpanUpdate
                   case 4: connectNodo(des);break;
+                  case 10: deleteArista(des); break;
+                  case 11: selectArista(des);break;
 
 
                 }
@@ -101,10 +104,10 @@ class _HomeState extends State<Home> {
               botonIcono(6, Icons.new_label,'Nuevo Codigo'),
               botonIcono(7, Icons.verified,'Verificar ejercicio'),
               botonIcono(8, Icons.chat_bubble_outline_rounded,'Matriz de adyacencia'),
-              //boton de ayuda
               botonIcono(9, Icons.help,'Ayuda'),
-
-
+              botonIcono(10, Icons.delete_forever,'Borrar Arista'),
+              //change arista
+              botonIcono(11, Icons.change_circle,'Cambiar peso')
             ],
           ),
         ),
@@ -152,6 +155,11 @@ class _HomeState extends State<Home> {
   deleteAll(){
     vNodo.clear();
     aristascurve.clear();
+    codigo="";
+    vNodoResuelto.clear();
+    aristasResuelto.clear();
+    matrizResuelta.clear();
+
   }
 
   // verificar si esta sobre el nodo
@@ -179,7 +187,6 @@ class _HomeState extends State<Home> {
           if(mode==6){
             confirmation();
           }
-
           if(mode==7){
             mostrarResultados();
           }
@@ -189,6 +196,7 @@ class _HomeState extends State<Home> {
           if(mode==9){
             mostrarAyuda();
           }
+
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -213,7 +221,6 @@ class _HomeState extends State<Home> {
 
 
   //Dialog para los pesos
-
   Future<void> mostrarDialogoPeso() async {
     int? peso = await showDialog<int>(
       context: context,
@@ -225,7 +232,6 @@ class _HomeState extends State<Home> {
       aristascurve.add(ModeloAristaCurve(vNodo[origentempcurve], vNodo[destempcurve], peso));
       origentempcurve = -1;
       destempcurve = -1;
-      // Cerrar el diálogo
       setState(() {});
     }
   }
@@ -259,7 +265,6 @@ class _HomeState extends State<Home> {
         },
       );
     } else {
-      // Si no hay nodos en la lista, mostrar directamente el diálogo para ingresar el nuevo código
       mostrarDialogoNuevoCodigo();
     }
   }
@@ -281,7 +286,6 @@ class _HomeState extends State<Home> {
           vNodoResuelto.add(ModeloNodo(etiqueta, 100.0 + i*100, 500.0, 40, Colors.amber.shade900));
         }
 
-        //101
         int c=0;
         for(c=0; c<codigoIngresado.length;c++){
           //conectar los nodos pero con los digitos del codigo
@@ -300,22 +304,18 @@ class _HomeState extends State<Home> {
           if (aristaEncontrada != null) {
             peso = aristaEncontrada.weight;
           }
-          // print('Peso: $peso');
           //guardar el peso contrario en una variable
           int pesoContrario = peso==0?1:0;
-          //print('Peso contrario: $pesoContrario');
           String codTemp = pesoContrario.toString();
           String pesoCont2= pesoContrario.toString();
 
           //concatenar los pesos de los nodos restantes
           for(int j=i;j<vNodoResuelto.length-1;j++){
-            //print('tamno ${vNodoResuelto.length} ');
             //buscar en las aristas la conexion del nodo actual con el siguiente y guardar el peso en una variable
             int pesoSig = aristasResuelto.firstWhere((element) => element.origen.etiqueta == vNodoResuelto[j].etiqueta && element.destino.etiqueta == vNodoResuelto[(j+1)%vNodoResuelto.length].etiqueta).weight;
             codTemp += pesoSig.toString();
 
           }
-        //  print("cadenas totales ${codTemp} ");
           if(verificarSecuencia(codigoIngresado, codTemp)){
             //print('codigo enviado: ${codigoIngresado}  cadena: ${codTemp} ');
              aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[i], vNodoResuelto[i], int.parse(pesoContrario.toString())));
@@ -351,10 +351,8 @@ class _HomeState extends State<Home> {
             int pesoSig = aristasResuelto.firstWhere((element) => element.origen.etiqueta == vNodoResuelto[h].etiqueta && element.destino.etiqueta == vNodoResuelto[(h+1)%vNodoResuelto.length].etiqueta).weight;
             cad += pesoSig.toString();
           }
-          print('cad: $cad');
           if(verificarSecuencia(codigoIngresado, cad)) {
             aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[vNodoResuelto.length-1], vNodoResuelto[1], int.parse(p.toString())));
-            //conectar con el resultado contrario de p
             aristasResuelto.add(ModeloAristaCurve(vNodoResuelto[vNodoResuelto.length-1], vNodoResuelto[0], int.parse((p==0)?'1':'0')));
             break;
 
@@ -367,9 +365,6 @@ class _HomeState extends State<Home> {
           p--;
         }
 
-
-
-
         //imprimirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
         matrizResuelta=construirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
 
@@ -377,11 +372,14 @@ class _HomeState extends State<Home> {
     }
   }
 
+  //Verificar secuencia
   bool verificarSecuencia(String codigo, String cadena) {
     int index = cadena.indexOf(codigo);
     return index != -1;
   }
 
+
+  //Imprimir matriz de adyacencia
   void imprimirMatrizAdyacencia(List<ModeloNodo> nodos, List<ModeloAristaCurve> aristas) {
     int n = nodos.length;
 
@@ -395,7 +393,6 @@ class _HomeState extends State<Home> {
       matriz[origen][destino] = arista.weight;
     }
 
-    // Imprimir la matriz
     print("Matriz de Adyacencia:");
     for (int i = 0; i < n; i++) {
       print(matriz[i]);
@@ -404,6 +401,7 @@ class _HomeState extends State<Home> {
 
 
 
+  //Construir matriz de adyacencia
   List<List<int>> construirMatrizAdyacencia(List<ModeloNodo> nodos, List<ModeloAristaCurve> aristas) {
     int n = nodos.length;
 
@@ -419,7 +417,7 @@ class _HomeState extends State<Home> {
     return matriz;
   }
 
-
+//Mostrar matriz de adyacencia
   void mostrarMatrizAdyacencia() {
     List<List<int>> matriz = construirMatrizAdyacencia(vNodo, aristascurve);
     List<String> etiquetas = vNodo.map((nodo) => nodo.etiqueta).toList(); // Obtener etiquetas de los nodos
@@ -432,7 +430,6 @@ class _HomeState extends State<Home> {
           content: SingleChildScrollView(
             child: Column(
               children: [
-                // Encabezado de las etiquetas de los nodos
                 Row(
                   children: [
                     SizedBox(width: 40), // Espacio en blanco para la celda vacía en la esquina superior izquierda
@@ -485,7 +482,7 @@ class _HomeState extends State<Home> {
 
 
 
-
+//Calcular porcentaje de completitud
   double calcularPorcentajeCompletitud(List<List<int>> matrizUsuario, List<List<int>> matrizPrograma) {
     int totalElementos = matrizPrograma.length * matrizPrograma.length;
     int elementosCoincidentes = 0;
@@ -502,7 +499,7 @@ class _HomeState extends State<Home> {
   }
 
 
-
+//Mostrar resultados
   void mostrarResultados () {
     List<List<int>> matrizPrograma = construirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
     List<List<int>> matrizUsuario = construirMatrizAdyacencia(vNodo, aristascurve);
@@ -526,7 +523,6 @@ class _HomeState extends State<Home> {
               SingleChildScrollView(
                 child: Column(
                   children: [
-                    // Aquí puedes mostrar la matriz de adyacencia como lo hiciste anteriormente
                   ],
                 ),
               ),
@@ -546,6 +542,7 @@ class _HomeState extends State<Home> {
   }
 
 
+  //Mostrar ayuda
   void mostrarAyuda(){
     showDialog(
       context: context,
@@ -556,8 +553,6 @@ class _HomeState extends State<Home> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-
-
               SizedBox(height: 20),
               SingleChildScrollView(
                 child: Column(
@@ -594,6 +589,8 @@ class _HomeState extends State<Home> {
 
   }
 
+
+  //Mostrar solución
   void mostrarSolucion(){
     List<List<int>> matriz = construirMatrizAdyacencia(vNodoResuelto, aristasResuelto);
     List<String> etiquetas = vNodoResuelto.map((nodo) => nodo.etiqueta).toList();
@@ -657,7 +654,7 @@ class _HomeState extends State<Home> {
   }
 
 
-
+//Mostrar ayuda inicial
   void mostrarAyudaInicial(){
     showDialog(
       context: context,
@@ -684,6 +681,8 @@ class _HomeState extends State<Home> {
     );
   }
 
+
+  //Mostrar ayuda media
   void mostrarAyudaMedia(){
     // Obtener la primera secuencia de conexión entre los nodos
     String primeraSecuencia = obtenerPrimeraSecuencia();
@@ -714,7 +713,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-
+//Mostrar ayuda avanzada
   void mostrarAyudaAvanzada(){
     // Obtener las conexiones mal hechas del usuario
     List<String> conexionesIncorrectas = obtenerConexionesIncorrectas();
@@ -746,6 +745,7 @@ class _HomeState extends State<Home> {
     );
   }
 
+  //Obtener primera secuencia
   String obtenerPrimeraSecuencia() {
     String secuencia = '';
     for (int i = 0; i < vNodoResuelto.length - 1; i++) {
@@ -770,6 +770,129 @@ class _HomeState extends State<Home> {
 
     return conexionesIncorrectas;
   }
+
+
+  // Método para detectar si el usuario ha tocado una arista
+  void deleteArista(des) {
+    for (int i = 0; i < aristascurve.length; i++) {
+      ModeloAristaCurve arista = aristascurve[i];
+      double distancia;
+      if (arista.origen == arista.destino) {
+        // Calcula la posición superior del nodo
+        double topY = arista.origen.y - arista.origen.radio;
+        // Calcula la distancia desde el toque hasta la posición superior del nodo
+        distancia = pointLineDistance(
+          des.globalPosition.dx,
+          des.globalPosition.dy,
+          arista.origen.x,
+          topY-30,
+          arista.origen.x,
+          arista.origen.y-30,
+        );
+      } else {
+        // Calcula la distancia entre el punto de toque y la arista
+        distancia = pointLineDistance(
+          des.globalPosition.dx,
+          des.globalPosition.dy,
+          arista.origen.x,
+          arista.origen.y,
+          arista.destino.x,
+          arista.destino.y,
+        );
+      }
+      // Verifica si la distancia es lo suficientemente pequeña para eliminar la arista
+      if (distancia <= 10) {
+        aristascurve.removeAt(i);
+        return;
+      }
+    }
+  }
+
+
+// Método para calcular la distancia de un punto a una línea (en este caso, la arista)
+  double pointLineDistance(double x, double y, double x1, double y1, double x2, double y2) {
+    double A = x - x1;
+    double B = y - y1;
+    double C = x2 - x1;
+    double D = y2 - y1;
+
+    double dot = A * C + B * D;
+    double len_sq = C * C + D * D;
+    double param = dot / len_sq;
+
+    double xx, yy;
+
+    if (param < 0 || (x1 == x2 && y1 == y2)) {
+      xx = x1;
+      yy = y1;
+    } else if (param > 1) {
+      xx = x2;
+      yy = y2;
+    } else {
+      xx = x1 + param * C;
+      yy = y1 + param * D;
+    }
+
+    double dx = x - xx;
+    double dy = y - yy;
+    return sqrt(dx * dx + dy * dy);
+  }
+
+  //dialogo cambiar peso
+
+// Método para detectar si el usuario ha tocado una arista
+  void selectArista(des) {
+    for (int i = 0; i < aristascurve.length; i++) {
+      ModeloAristaCurve arista = aristascurve[i];
+      double distancia;
+      if (arista.origen == arista.destino) {
+        // Calcula la posición superior del nodo
+        double topY = arista.origen.y - arista.origen.radio;
+        // Calcula la distancia desde el toque hasta la posición superior del nodo
+        distancia = pointLineDistance(
+          des.globalPosition.dx,
+          des.globalPosition.dy,
+          arista.origen.x,
+          topY-30,
+          arista.origen.x,
+          arista.origen.y-30,
+        );
+      } else {
+        // Calcula la distancia entre el punto de toque y la arista
+        distancia = pointLineDistance(
+          des.globalPosition.dx,
+          des.globalPosition.dy,
+          arista.origen.x,
+          arista.origen.y,
+          arista.destino.x,
+          arista.destino.y,
+        );
+      }
+      // Verifica si la distancia es lo suficientemente pequeña para eliminar la arista
+      if (distancia <= 10) {
+        // Abre el modal para cambiar el peso de la arista
+        mostrarDialogoCambioPeso(arista);
+        return;
+      }
+    }
+  }
+
+// Método para mostrar el modal de cambio de peso de la arista
+  Future<void> mostrarDialogoCambioPeso(ModeloAristaCurve arista) async {
+    int? nuevoPeso = await showDialog<int>(
+      context: context,
+      builder: (BuildContext context) {
+        return CambiarPesoDialog(pesoActual: arista.weight);
+      },
+    );
+    print('nuevo peso: $nuevoPeso');
+    if (nuevoPeso != null) {
+      // Actualiza el peso de la arista utilizando un método setter
+      arista.weight=nuevoPeso;
+      setState(() {});
+    }
+  }
+
 
 
 
