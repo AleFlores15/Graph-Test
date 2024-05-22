@@ -97,17 +97,19 @@ class _HomeState extends State<Home> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               botonIcono(1, Icons.add,'Agregar Nodo'),
-              botonIcono(2, Icons.delete,'Borrar Nodo'),
-              botonIcono(3, Icons.moving,'Mover Nodo'),
               botonIcono(4, Icons.arrow_right_alt_sharp,'Conectar Nodo'),
-              botonIcono(5, Icons.dangerous,'Borrar Todo'),
+              botonIcono(3, Icons.moving,'Mover Nodo'),
               botonIcono(6, Icons.new_label,'Nuevo Codigo'),
               botonIcono(7, Icons.verified,'Verificar ejercicio'),
               botonIcono(8, Icons.chat_bubble_outline_rounded,'Matriz de adyacencia'),
               botonIcono(9, Icons.help,'Ayuda'),
+              botonIcono(2, Icons.delete,'Borrar Nodo'),
               botonIcono(10, Icons.delete_forever,'Borrar Arista'),
-              //change arista
+              botonIcono(5, Icons.dangerous,'Borrar Todo'),
               botonIcono(11, Icons.change_circle,'Cambiar peso')
+
+
+              //change arista
             ],
           ),
         ),
