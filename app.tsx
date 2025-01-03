@@ -77,6 +77,11 @@ export default function App() {
   };
 
 const handleReset = async () => {
+  const isConfirmed = window.confirm("¿Estás seguro de que deseas resetear los ganadores?");
+
+  if (!isConfirmed) {
+    return;
+  }
   setButtonSortearDisabled(true);
   setIsResetLoading(true); 
 
